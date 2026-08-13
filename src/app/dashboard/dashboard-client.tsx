@@ -27,8 +27,13 @@ type DashboardClientProps = {
     amountSpent: number;
     dailyLimit: number;
     result: number;
-    status: "SAVED" | "SPENT" | "OVERSPENT";
+    status:
+      | "SAVED"
+      | "SPENT"
+      | "OVERSPENT";
   } | null;
+
+  currentDailyLimit: number;
 
   currentBalance: number;
   weeklyBalance: number;
@@ -39,6 +44,7 @@ export default function DashboardClient({
   user,
   budget,
   todayEntry,
+  currentDailyLimit,
   currentBalance,
   weeklyBalance,
   monthlyBalance,
@@ -58,26 +64,22 @@ export default function DashboardClient({
   const [error, setError] =
     useState("");
 
-  const currentDailyLimit =
-    todayEntry?.dailyLimit ??
-    budget.initialDailyLimit;
-
   const currentResult =
     todayEntry?.result ?? 0;
 
   /*
    * Save the user's browser timezone.
-   *
-   * This allows the application to know what
-   * "today" means for this particular user.
    */
   useEffect(() => {
     const timezone =
-      Intl.DateTimeFormat().resolvedOptions()
+      Intl.DateTimeFormat()
+        .resolvedOptions()
         .timeZone;
 
-    updateUserTimezone(timezone).catch(() => {
-      // A timezone update should never
+    updateUserTimezone(
+      timezone
+    ).catch(() => {
+      // Timezone update should never
       // prevent the dashboard from working.
     });
   }, []);
@@ -96,13 +98,16 @@ export default function DashboardClient({
 
     setError("");
 
-    const amount = Number(amountSpent);
+    const amount =
+      Number(amountSpent);
 
     if (
       !Number.isInteger(amount) ||
       amount < 0
     ) {
-      setError("Enter a valid amount.");
+      setError(
+        "Enter a valid amount."
+      );
       return;
     }
 
@@ -117,10 +122,10 @@ export default function DashboardClient({
     );
 
     /*
-     * Get the date according to the user's
-     * browser rather than relying on the server.
+     * Get today's date from the browser.
      */
-    const today = new Date();
+    const today =
+      new Date();
 
     const todayString = [
       today.getFullYear(),
@@ -138,7 +143,9 @@ export default function DashboardClient({
     );
 
     try {
-      await saveDailyEntry(formData);
+      await saveDailyEntry(
+        formData
+      );
 
       router.refresh();
     } catch {
@@ -158,7 +165,9 @@ export default function DashboardClient({
     }
 
     if (result < 0) {
-      return `-₹${Math.abs(result)}`;
+      return `-₹${Math.abs(
+        result
+      )}`;
     }
 
     return "₹0";
@@ -184,6 +193,7 @@ export default function DashboardClient({
 
         {/* HEADER */}
         <header className="mb-8 flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
+
           <div>
             <p className="text-sm font-medium text-muted-foreground">
               DAILY BUDGET
@@ -436,7 +446,10 @@ export default function DashboardClient({
                   </p>
 
                   <p className="mt-1 text-xl font-semibold">
-                    ₹{todayEntry.dailyLimit}
+                    ₹
+                    {
+                      todayEntry.dailyLimit
+                    }
                   </p>
                 </div>
 
@@ -446,7 +459,10 @@ export default function DashboardClient({
                   </p>
 
                   <p className="mt-1 text-xl font-semibold">
-                    ₹{todayEntry.amountSpent}
+                    ₹
+                    {
+                      todayEntry.amountSpent
+                    }
                   </p>
                 </div>
 
@@ -469,9 +485,11 @@ export default function DashboardClient({
                 </p>
 
                 <p className="mt-2 text-sm text-muted-foreground">
-                  {todayEntry.result > 0
+                  {todayEntry.result >
+                  0
                     ? `You saved ₹${todayEntry.result} compared with today's limit.`
-                    : todayEntry.result < 0
+                    : todayEntry.result <
+                        0
                       ? `You overspent by ₹${Math.abs(
                           todayEntry.result
                         )} today.`
@@ -499,7 +517,10 @@ export default function DashboardClient({
               </p>
 
               <p className="mt-1 font-semibold">
-                ₹{budget.initialDailyLimit}
+                ₹
+                {
+                  budget.initialDailyLimit
+                }
               </p>
             </div>
 
