@@ -1,0 +1,121 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum DailyEntryStatus {
+  SAVED
+  SPENT
+  OVERSPENT
+}
+
+model User {
+  id            String    @id
+  name          String
+  email         String    @unique
+  emailVerified Boolean   @default(false)
+  image         String?
+  timezone      String    @default("Asia/Kolkata")
+  createdAt     DateTime
+  updatedAt     DateTime
+
+  sessions Session[]
+  accounts Account[]
+
+  budgets Budget[]
+}
+
+model Session {
+  id        String   @id
+  expiresAt DateTime
+  token     String   @unique
+  createdAt DateTime
+  updatedAt DateTime
+  ipAddress String?
+  userAgent String?
+
+  userId String
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+}
+
+model Account {
+  id                    String    @id
+  accountId             String
+  providerId            String
+  userId                String
+  user                  User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  accessToken           String?
+  refreshToken          String?
+  idToken               String?
+  accessTokenExpiresAt  DateTime?
+  refreshTokenExpiresAt DateTime?
+  scope                 String?
+  password              String?
+
+  createdAt DateTime
+  updatedAt DateTime
+
+  @@index([userId])
+}
+
+model Verification {
+  id         String   @id
+  identifier String
+  value      String
+  expiresAt  DateTime
+  createdAt  DateTime
+  updatedAt  DateTime
+
+  @@index([identifier])
+}
+
+model Budget {
+  id                String   @id @default(cuid())
+  userId            String
+  startDate         DateTime
+  initialDailyLimit Int
+  createdAt         DateTime @default(now())
+  updatedAt         DateTime @updatedAt
+
+  user         User           @relation(fields: [userId], references: [id], onDelete: Cascade)
+  changes      BudgetChange[]
+  dailyEntries DailyEntry[]
+
+  @@index([userId])
+}
+
+model BudgetChange {
+  id            String   @id @default(cuid())
+  budgetId      String
+  effectiveDate DateTime
+  dailyLimit    Int
+  createdAt     DateTime @default(now())
+
+  budget Budget @relation(fields: [budgetId], references: [id], onDelete: Cascade)
+
+  @@index([budgetId, effectiveDate])
+}
+
+model DailyEntry {
+  id          String           @id @default(cuid())
+  budgetId    String
+  date        DateTime
+  amountSpent Int
+  dailyLimit  Int
+  result      Int
+  status      DailyEntryStatus
+  createdAt   DateTime         @default(now())
+  updatedAt   DateTime         @updatedAt
+
+  budget Budget @relation(fields: [budgetId], references: [id], onDelete: Cascade)
+
+  @@unique([budgetId, date])
+  @@index([budgetId, date])
+}
